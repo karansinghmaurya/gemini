@@ -1,36 +1,35 @@
-import google.generativeai as genai
+import requests
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
-# Tokens
-GEMINI_KEY = "AIzaSyDzIN_g46eu2JhU0vOeOPtioQ_GkHTtBgk"
-TG_TOKEN = "8344010103:AAFRJHcm1BfI3TEWf4emhN9_y3AE8O1YaL0"
+BOT_TOKEN = "8344010103:AAFRJHcm1BfI3TEWf4emhN9_y3AE8O1YaL0"
 
-# AI Setup
-genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-pro')
-
-# /start command ke liye function
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Stylish Font (Unicode text)
-    welcome_text = "✨ 𝑴𝒂𝒅𝒂𝒎 𝒋𝒊 ✨\n\nMain aapki kaise madad kar sakta hoon?"
-    await update.message.reply_text(welcome_text)
+CHAT_API = "https://api.affiliateplus.xyz/api/chatbot?message={msg}&botname=AI&ownername=User"
+IMAGE_API = "https://api.affiliateplus.xyz/api/imagegen?text={msg}&type=neon"
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
-    response = model.generate_content(user_text)
-    await update.message.reply_text(response.text)
 
-if __name__ == '__main__':
-    app = ApplicationBuilder().token(TG_TOKEN).build()
-    
-    # Start handler pehle add karein
-    app.add_handler(CommandHandler("start", start))
-    
-    # Message handler
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-    
-    print("Bot chalu hai... Madam ji ke liye tayyar!")
+    # Chat API
+    res = requests.get(CHAT_API.format(msg=user_text))
+    data = res.json()
+    reply = data.get("message", "Error aaya 😢")
+
+    await update.message.reply_text(reply)
+
+async def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("Bot chal raha hai 🚀...")
     app.run_polling()
 
+if __name__ == "__main__":
+    main()
+if user_text.startswith("/img"):
+    text = user_text.replace("/img ", "")
+    img_url = IMAGE_API.format(msg=text)
+    await update.message.reply_photo(img_url)
+    return
 
